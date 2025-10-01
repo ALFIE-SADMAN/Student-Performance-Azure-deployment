@@ -1,6 +1,12 @@
 # Student Performance — Azure Deployment
 
-A complete end-to-end solution for predicting student performance, built using Python, Docker, and deployed to Azure. This repository contains everything needed to train a model, containerize the application, and deploy it in Azure infrastructure.
+[![Build Status](https://img.shields.io/github/actions/workflow/status/ALFIE-SADMAN/Student-Performance-Azure-deployment/main_studentperformancecheck.yml?branch=main)](https://github.com/ALFIE-SADMAN/Student-Performance-Azure-deployment/actions)
+[![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)](https://www.docker.com/)
+[![Azure](https://img.shields.io/badge/Deployed%20on-Azure-blue)](https://azure.microsoft.com/)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-brightgreen)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+A complete end-to-end solution for predicting student performance, built using **Python, Flask, Docker, and Azure**. This repository demonstrates the full lifecycle of a machine learning project: from exploratory data analysis and model training, to containerization and deployment in the cloud.
 
 ---
 
@@ -8,22 +14,22 @@ A complete end-to-end solution for predicting student performance, built using P
 
 1. [Project Overview](#project-overview)
 2. [Features](#features)
-3. [Architecture & Components](#architecture--components)
+3. [Project Structure](#project-structure)
 4. [Getting Started](#getting-started)
 
    * [Prerequisites](#prerequisites)
-   * [Repository Structure](#repository-structure)
    * [Installation & Local Setup](#installation--local-setup)
-   * [Training & Notebook](#training--notebook)
+   * [Training & Notebooks](#training--notebooks)
+   * [Running the Flask App](#running-the-flask-app)
    * [Dockerization](#dockerization)
    * [Azure Deployment](#azure-deployment)
 5. [Usage](#usage)
-6. [Configuration & Environment Variables](#configuration--environment-variables)
-7. [CI/CD & Automation](#cicd--automation)
+6. [Configuration](#configuration)
+7. [CI/CD](#cicd)
 8. [Monitoring & Logging](#monitoring--logging)
-9. [Security Considerations](#security-considerations)
+9. [Security](#security)
 10. [Testing](#testing)
-11. [Troubleshooting & FAQs](#troubleshooting--faqs)
+11. [Troubleshooting](#troubleshooting)
 12. [Contributing](#contributing)
 13. [License](#license)
 14. [Acknowledgements](#acknowledgements)
@@ -32,49 +38,67 @@ A complete end-to-end solution for predicting student performance, built using P
 
 ## Project Overview
 
-With increasing emphasis on data-driven interventions in education, this project aims to predict which students may struggle or succeed based on various features (e.g. demographic, academic history, etc.). The system encapsulates the following flow:
+This project predicts student performance based on academic and demographic data. The workflow includes:
 
-1. Data exploration and model training (in notebooks / scripts).
-2. Packaging the model and inference logic in a Python web app (e.g., Flask or FastAPI).
-3. Containerizing the app with Docker.
-4. Pushing the container image to Azure Container Registry (ACR).
-5. Deploying and serving the app in Azure (App Service, AKS, or equivalent).
+1. Data exploration and preprocessing in Jupyter notebooks.
+2. Training ML models (e.g., CatBoost, Scikit-learn pipelines).
+3. Saving trained artifacts (model + preprocessor).
+4. Serving predictions via a Flask web application.
+5. Containerizing with Docker for reproducibility.
+6. Deploying on Azure App Service using CI/CD workflows.
 
-The result is a scalable, maintainable, and production-ready student performance prediction service.
+The final product is a **scalable prediction API** with a simple front-end interface.
 
 ---
 
 ## Features
 
-* **Model training & experimentation**: Jupyter notebooks and scripts to explore data, build models, and evaluate performance.
-* **Web API service**: A lightweight server exposing endpoints for prediction requests (e.g., `POST /predict`).
-* **Docker support**: `Dockerfile` to build the service image.
-* **Azure Deployment**: Includes templates, scripts, and configuration to deploy the container into Azure services.
-* **Separation of concerns**: Clear folder structure to distinguish between data, code, templates, and deployment artifacts.
-* **Extensibility**: Easily swap in new models, add endpoints, or extend to more complex pipelines.
+* **Exploratory Data Analysis (EDA)**: Insights into student data with Jupyter notebooks.
+* **Model Training**: Scripts for ingestion, transformation, training, and evaluation.
+* **Reusable Pipelines**: Modular code for preprocessing and prediction.
+* **Flask Web App**: Simple UI (`templates/home.html`, `index.html`) for user inputs.
+* **Dockerized Deployment**: Easy containerization using the included `Dockerfile`.
+* **Azure CI/CD**: GitHub Actions workflow (`.github/workflows/main_studentperformancecheck.yml`) for automated deployment.
+* **Logging & Error Handling**: Centralized logging and custom exception handling.
 
 ---
 
-## Architecture & Components
-
-Below is a high-level architecture diagram (replace or embed a visual later):
+## Project Structure
 
 ```
-User → HTTP Request → Web API Container → (loads model) → Predict → Response  
-                     ↑  
-             (deployed on Azure via ACR, Azure App Service / AKS)  
+Student-Performance-Azure-deployment/
+├── Dockerfile                  # Container build instructions
+├── README.md                   # Project documentation
+├── app.py                      # Flask application entrypoint
+├── requirements.txt            # Python dependencies
+├── setup.py                    # Project setup script
+├── .github/
+│   └── workflows/
+│       └── main_studentperformancecheck.yml   # CI/CD workflow
+├── artifacts/                  # Saved ML artifacts
+│   ├── data.csv
+│   ├── model.pkl
+│   ├── preprocessor.pkl
+│   ├── train.csv
+│   └── test.csv
+├── notebook/                   # Jupyter notebooks for exploration
+│   ├── 1 . EDA STUDENT PERFORMANCE .ipynb
+│   ├── 2. MODEL TRAINING.ipynb
+│   └── data/stud.csv
+├── src/                        # Core project code
+│   ├── exception.py             # Custom exceptions
+│   ├── logger.py                # Logging utilities
+│   ├── utils.py                 # Helper functions
+│   ├── components/              # Data & model pipelines
+│   │   ├── data_ingestion.py
+│   │   ├── data_transformation.py
+│   │   └── model_trainer.py
+│   └── pipeline/
+│       └── predict_pipeline.py  # Prediction logic
+└── templates/                  # Flask templates
+    ├── home.html
+    └── index.html
 ```
-
-Key components:
-
-| Component                                | Purpose                                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Notebook / `notebook/` folder**        | Data exploration, feature engineering, baseline models, evaluation                          |
-| **`src/` folder**                        | Core application logic including model loading, request handling, data preprocessing        |
-| **`templates/`**                         | (Optional) HTML templates if you provide a simple UI or web interface                       |
-| **`Dockerfile`**                         | Instructions to build the container image                                                   |
-| **`setup.py` / `requirements.txt`**      | Python packaging and dependency management                                                  |
-| **Azure deployment scripts / templates** | Infrastructure as code — e.g. ARM templates, Bicep, or scripts to deploy container to Azure |
 
 ---
 
@@ -82,34 +106,10 @@ Key components:
 
 ### Prerequisites
 
-* Python 3.7+
-* Docker Engine
+* Python 3.8+
+* Docker
 * Azure CLI
-* Access to an Azure subscription
-* (Optional) VS Code or another IDE
-
-### Repository Structure
-
-```
-├── notebook/
-│   ├── data_exploration.ipynb
-│   ├── modeling.ipynb
-│   └── ...
-├── src/
-│   ├── app.py
-│   ├── model.py
-│   ├── utils.py
-│   └── ...
-├── templates/
-│   └── index.html
-├── Dockerfile
-├── setup.py
-├── requirements.txt
-└── azure-deploy/
-    ├── arm-template.json
-    ├── deployment-script.sh
-    └── README-azure.md
-```
+* Git
 
 ### Installation & Local Setup
 
@@ -117,37 +117,29 @@ Key components:
 git clone https://github.com/ALFIE-SADMAN/Student-Performance-Azure-deployment.git
 cd Student-Performance-Azure-deployment
 
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
+python -m venv venv
+source venv/bin/activate   # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-(Optional):
+### Training & Notebooks
+
+* Use notebooks in `notebook/` for EDA and model training.
+* Artifacts (`model.pkl`, `preprocessor.pkl`) will be saved in `artifacts/`.
+
+### Running the Flask App
 
 ```bash
-pip install -e .
+python app.py
 ```
 
-### Training & Notebook
-
-* Use notebooks in `notebook/` for exploration, feature engineering, and modeling.
-* Save trained artifacts (e.g., `model.pkl`) into `src/models/`.
-* The API app will load and serve these models.
+Visit: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ### Dockerization
 
 ```bash
-docker build -t student-performance-app:latest .
-docker run -p 8080:8080 student-performance-app:latest
-```
-
-Test with:
-
-```bash
-curl -X POST http://localhost:8080/predict \
-  -H "Content-Type: application/json" \
-  -d '{"feature1": value, "feature2": value}'
+docker build -t student-performance-app .
+docker run -p 8080:8080 student-performance-app
 ```
 
 ### Azure Deployment
@@ -170,7 +162,8 @@ az webapp create \
 
 ## Usage
 
-Example request:
+* Web UI: Fill in student features in the form (from `home.html`) to get predictions.
+* API: Use `POST /predict` with JSON input. Example:
 
 ```json
 {
@@ -195,42 +188,36 @@ Response:
 
 ---
 
-## Configuration & Environment Variables
+## Configuration
 
-| ENV var                    | Description       | Example value       |
-| -------------------------- | ----------------- | ------------------- |
-| `MODEL_PATH`               | Path to model     | `models/model.pkl`  |
-| `SCALER_PATH`              | Preprocessor path | `models/scaler.pkl` |
-| `PORT`                     | App port          | `8080`              |
-| `LOG_LEVEL`                | Logging level     | `INFO`              |
-| `AZURE_STORAGE_CONNECTION` | Azure storage key | `...`               |
+| ENV var       | Description            |
+| ------------- | ---------------------- |
+| `MODEL_PATH`  | Path to model artifact |
+| `SCALER_PATH` | Path to preprocessor   |
+| `PORT`        | Flask app port         |
+| `LOG_LEVEL`   | Logging verbosity      |
 
 ---
 
-## CI/CD & Automation
+## CI/CD
 
-* Use GitHub Actions / Azure Pipelines for building and deploying.
-* Automate Docker builds, ACR pushes, and Web App/Kubernetes deployment.
-* Infrastructure as Code recommended (ARM / Bicep / Terraform).
+* GitHub Actions workflow builds, tests, and deploys Docker image.
+* Workflow file: `.github/workflows/main_studentperformancecheck.yml`.
 
 ---
 
 ## Monitoring & Logging
 
-* Use **Azure Application Insights** for telemetry.
-* Log API requests, predictions, errors.
-* Enable alerts for failures or latency spikes.
-* Store logs in **Azure Log Analytics**.
+* Logs captured using `logger.py`.
+* Azure Application Insights recommended for production monitoring.
 
 ---
 
-## Security Considerations
+## Security
 
-* Input validation and sanitization.
-* Authentication (API key, OAuth, Azure AD).
-* Secrets managed in **Azure Key Vault**.
-* HTTPS/TLS enforced.
-* Regular container vulnerability scans.
+* Sanitize all inputs.
+* Store secrets (e.g., Azure creds) in **Key Vault**.
+* Enforce HTTPS for all endpoints.
 
 ---
 
@@ -240,37 +227,33 @@ Response:
 pytest tests/
 ```
 
-* Unit tests for preprocessing and inference.
-* Integration tests for containerized app.
-* Postman/Azure Test Plans for deployed API.
+* Unit tests for `src/components` and `src/pipeline`.
+* Integration tests for Flask API.
 
 ---
 
-## Troubleshooting & FAQs
+## Troubleshooting
 
-| Issue                | Fix                                  |
-| -------------------- | ------------------------------------ |
-| 500 error            | Check logs, model path incorrect     |
-| Cannot push ACR      | Ensure `az acr login` ran            |
-| Web app fails        | Check container logs in Azure Portal |
-| Env vars not working | Verify App Settings                  |
-| Low accuracy         | Improve preprocessing & model tuning |
+| Issue                   | Fix                                                               |
+| ----------------------- | ----------------------------------------------------------------- |
+| 500 Error on `/predict` | Check if `model.pkl` and `preprocessor.pkl` exist in `artifacts/` |
+| Docker build fails      | Verify Python version and dependencies                            |
+| Azure deploy fails      | Ensure ACR and App Service exist, check credentials               |
 
 ---
 
 ## Contributing
 
-1. Fork the repo.
-2. Create a branch (`feature/new-feature`).
-3. Commit with clear messages.
-4. Add/update tests.
-5. Submit PR.
+1. Fork this repo.
+2. Create a feature branch (`feature/new-feature`).
+3. Add tests and documentation.
+4. Submit a PR.
 
 ---
 
 ## License
 
-```text
+```
 MIT License
 Copyright (c) 2025 ALFIE-SADMAN
 ```
@@ -279,7 +262,7 @@ Copyright (c) 2025 ALFIE-SADMAN
 
 ## Acknowledgements
 
-* Libraries: scikit-learn, pandas, Flask/FastAPI.
-* Azure documentation and tutorials.
-* Open educational data sources.
-
+* **scikit-learn**, **pandas**, **CatBoost** for ML.
+* **Flask** for the web app.
+* **Azure App Service** for deployment.
+* GitHub Actions for CI/CD.
